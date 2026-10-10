@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReaderH · 阅读器交互原型</title>
+<meta name="description" content="在浏览器里体验 ReaderH 的阅读流程：分页、仿真翻页、字号/行距/段距/分栏、7 套主题、自动续章。">
+<link rel="stylesheet" href="/styles.css">
+<style>
+:root{--brand:#5B7CF5;--brand2:#7C6BF0;--ink:#151922;--ink2:#5A6373;--ink3:#8B93A3;--line:#E8EBF2;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+background:#EFEFF4;color:var(--ink);display:flex;justify-content:center;min-height:100vh;align-items:flex-start;padding:26px 12px 60px}
+.device{width:300px;height:640px;background:#111827;padding:11px;border-radius:40px;box-shadow:0 26px 60px rgba(21,25,34,.3);flex:0 0 auto}
+.screen{width:100%;height:100%;border-radius:30px;overflow:hidden;position:relative;display:flex;flex-direction:column;background:#fff}
+.bar{height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line)}
+.bar .back{font-size:16px;color:var(--brand);cursor:pointer;width:24px}
+.bar .ttl{flex:1;text-align:center;font-size:13px;font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg{flex:1;position:relative;overflow:hidden;padding:14px 18px 30px}
+.txt{font-size:15px;line-height:1.95;text-align:justify;transition:.25s;will-change:transform}
+.txt h3{font-size:19px;line-height:1.5;margin:0 0 14px}
+.txt p{margin:0 0 12px;text-indent:2em}
+.foot{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:10.5px;color:var(--ink3)}
+.panel{margin-left:26px;width:340px;background:#fff;border-radius:20px;padding:22px;box-shadow:0 10px 30px rgba(21,25,34,.07);align-self:flex-start}
+.panel h2{font-size:19px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.panel .sub{font-size:12.5px;color:var(--ink3);margin-bottom:18px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border:0}
+.row .lb{flex:1;color:var(--ink2)}
+.row .val{width:48px;text-align:right;font-variant-numeric:tabular-nums;color:var(--brand);font-weight:650}
+input[type=range]{width:150px;accent-color:var(--brand)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);cursor:pointer;background:#fff;color:var(--ink2)}
+.chip.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+.sw{width:46px;height:26px;border-radius:15px;background:var(--line);position:relative;cursor:pointer;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--brand)}
+.sw.on::after{left:23px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 16px;border-radius:11px;
+background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer;margin-top:6px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.hint{margin-top:16px;font-size:12.5px;color:var(--ink3);line-height:1.8;background:var(--bg2);border-radius:12px;padding:12px 14px}
+.curl{position:absolute;inset:0;pointer-events:none;opacity:0}
+.curl.go{animation:curl .55s cubic-bezier(.3,.85,.35,1)}
+@keyframes curl{0%{opacity:1;transform:translateX(55%) skewX(-8deg)}55%{opacity:1}100%{opacity:0;transform:translateX(-55%) skewX(6deg)}}
+.curl::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(0,0,0,.28),rgba(0,0,0,0) 40%,rgba(255,255,255,.82) 50%,rgba(0,0,0,0) 62%)}
+@media(max-width:800px){body{flex-direction:column;align-items:center}.panel{margin:22px 0 0;width:100%;max-width:440px}.device{width:280px;height:600px}}
+</style>
+</head>
+<body>
+<div class="device" aria-label="手机预览">
+<div class="screen" id="screen">
+<div class="bar"><span class="back" id="back" role="button" tabindex="0" aria-label="返回">‹</span><span class="ttl" id="ttl">阅读</span><span style="font-size:16px;color:var(--brand);cursor:pointer" onclick="document.getElementById('panel').scrollIntoView({behavior:'smooth'})" tabindex="0" role="button" aria-label="打开设置">⚙</span></div>
+<div class="pg" id="pg">
+<div class="txt" id="txt"></div>
+<div class="curl" id="curl" aria-hidden="true"></div>
+<div class="foot" id="foot"></div>
+</div>
+</div>
+</div>
+
+<div class="panel" id="panel">
+<h2>阅读设置</h2>
+<div class="sub">改动会实时反映到左侧屏幕上</div>
+
+<div class="row"><span class="lb">字号</span><input type="range" min="11" max="22" step="0.5" id="rFs" value="15" aria-label="字号"><span class="val" id="vFs">15</span></div>
+<div class="row"><span class="lb">行距</span><input type="range" min="1.4" max="2.6" step="0.05" id="rLh" value="1.95" aria-label="行距"><span class="val" id="vLh">1.95</span></div>
+<div class="row"><span class="lb">段距</span><input type="range" min="0" max="24" step="1" id="rMb" value="12" aria-label="段距"><span class="val" id="vMb">12</span></div>
+<div class="row"><span class="lb">分栏</span>
+<div class="chips" id="cols" role="radiogroup" aria-label="分栏数"><span class="chip on" data-c="1" role="radio" aria-checked="true" tabindex="0">1</span><span class="chip" data-c="2" role="radio" aria-checked="false" tabindex="0">2</span><span class="chip" data-c="3" role="radio" aria-checked="false" tabindex="0">3</span></div></div>
+<div class="row"><span class="lb">主题</span>
+<div class="chips" id="thms" role="radiogroup" aria-label="阅读主题"></div></div>
+<div class="row"><span class="lb">仿真翻页</span><div class="sw on" id="swCurl" role="switch" aria-checked="true" tabindex="0"></div></div>
+<div class="row"><span class="lb">自动续章</span><div class="sw on" id="swNext" role="switch" aria-checked="true" tabindex="0"></div></div>
+
+<button class="btn" onclick="flip(1)">翻到下一页 →</button>
+<button class="btn ghost" onclick="reset()">恢复默认</button>
+
+<div class="hint">· 点屏幕<strong>右半侧</strong>下一页，<strong>左 35%</strong>上一页<br>
+· 分页按可视高度逐屏切，不会出现半行截断<br>
+· 续章阈值：剩余 ≤ 2 页时后台抓取下一章</div>
+</div>
+
+<script>
+const CHAPTER = {
+  title:'为什么我们需要「阅读模式」',
+  paras:[
+    '当你打开一个网页，真正想读的正文常常只占屏幕的一小块：两侧是推荐位，中间插着广告，字体忽大忽小，行距挤成一团。阅读模式做的事很简单——把正文之外的东西全部拿掉，再按你能接受的字号、行距、背景色重新排一遍。',
+    '好的阅读体验有几个共同点：字号可以自己定、行距宽松、背景不刺眼、翻页符合直觉、读到一半退出去还能接着读。',
+    '手机上的阅读还要解决另外两件事：一是屏幕窄，正文必须按屏幕尺寸重新分页，而不是无限下滑；二是长文和小说通常是分页的，读完一章要能自动接上下一章。',
+    '分页不是简单地按字数切。渲染引擎把 HTML 转成带样式的文本流，交给 StaticLayout 按实际行高一行行量，量满一屏就切一页——所以无论字号调到多大、行距调到多松，都不会出现半行文字被截断。',
+    '翻页是另一件讲究的事。仿真模式下，手指从右下角掀起页面，下面透出的是下一页的内容，折痕处有阴影，翻过去之后背面显示的是刚被翻走那一页——和真实纸张的行为一致。',
+    '长篇内容还要能续上。当读到最后一页时，App 会在后台用一个隐藏的 WebView 打开原文的「下一页」链接，抽取出正文追加到当前文章后面，重新分页后无缝接上。',
+    '最后是所有阅读类应用都绕不开的一点：数据只留在本机。没有账号，没有同步，没有服务器，书架、进度、偏好设置都写在手机本地的 SQLite 和 SharedPreferences 里。'
+  ]
+};
+const THEMES=[
+  {n:'纸白',bg:'#F7F5F1',fg:'#2B2B2B'},{n:'纯白',bg:'#FFFFFF',fg:'#222222'},
+  {n:'米黄',bg:'#FBF3DC',fg:'#3A3226'},{n:'护眼绿',bg:'#CDE6C8',fg:'#22331F'},
+  {n:'青蓝',bg:'#DCEAF3',fg:'#1E2C36'},{n:'暗夜',bg:'#1C1F26',fg:'#B8BEC9'},
+  {n:'纯黑',bg:'#000000',fg:'#9EA5B0'}
+];
+let page=0,total=1,fs=15,lh=1.95,mb=12,cols=1,ti=0,curlOn=true,nextOn=true;
+const pg=document.getElementById('pg'),txt=document.getElementById('txt'),curl=document.getElementById('curl'),screen=document.getElementById('screen');
+let raf=0;
+
+function build(){
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(()=>{
+    txt.style.columnCount=cols;
+    txt.style.columnGap=(cols>1?'22px':'0');
+    txt.style.height='auto';
+    txt.innerHTML='<h3>'+CHAPTER.title+'</h3>'+CHAPTER.paras.map(p=>'<p>'+p+'</p>').join('');
+    txt.style.fontSize=fs+'px'; txt.style.lineHeight=lh;
+    document.querySelectorAll('#txt p').forEach(p=>p.style.marginBottom=mb+'px');
+    const avail=pg.clientHeight-28;
+    total=Math.max(1,Math.ceil(txt.scrollHeight/avail));
+    page=Math.min(page,total-1);
+    txt.style.height=avail+'px';
+    txt.style.transform='translateY('+(-page*avail)+'px)';
+    txt.style.overflow='hidden';
+    document.getElementById('foot').textContent=(page+1)+' / '+total+' 页';
+    document.getElementById('ttl').textContent=CHAPTER.title;
+  });
+}
+function flip(d){
+  if(d>0&&page>=total-1){ if(nextOn) appendNext(); else anim(); return; }
+  if(d<0&&page<=0) return;
+  page+=d; anim(); build();
+}
+function anim(){curl.classList.remove('go');void curl.offsetWidth;if(curlOn)curl.classList.add('go');}
+function appendNext(){
+  CHAPTER.paras.push('（续章示例）新的一章已经开始。后台的隐藏 WebView 在还剩两页时就已经悄悄抓取并抽取好了这段正文，分页后直接接在后面——你只管翻页，衔接由引擎完成。');
+  page=0; build();
+}
+function setTheme(i){ti=i;const t=THEMES[i];screen.style.background=t.bg;txt.style.color=t.fg;
+  document.querySelectorAll('#thms .chip').forEach((c,k)=>{
+    c.classList.toggle('on',k===i);
+    c.setAttribute('aria-checked', k===i?'true':'false');
+  });}
+
+document.getElementById('rFs').oninput=e=>{fs=parseFloat(e.target.value);document.getElementById('vFs').textContent=fs;build();};
+document.getElementById('rLh').oninput=e=>{lh=parseFloat(e.target.value);document.getElementById('vLh').textContent=lh.toFixed(2);build();};
+document.getElementById('rMb').oninput=e=>{mb=parseInt(e.target.value);document.getElementById('vMb').textContent=mb;build();};
+document.getElementById('cols').onclick=e=>{const c=e.target.dataset.c;if(!c)return;cols=+c;
+  document.querySelectorAll('#cols .chip').forEach(x=>{x.classList.toggle('on',x===e.target);x.setAttribute('aria-checked', x===e.target?'true':'false');});build();};
+document.querySelectorAll('#cols .chip, #thms .chip, #swCurl, #swNext').forEach(el=>{
+  el.addEventListener('keydown', e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();el.click();}});
+});
+document.getElementById('swCurl').onclick=e=>{curlOn=!curlOn;e.target.classList.toggle('on',curlOn);e.target.setAttribute('aria-checked', curlOn);};
+document.getElementById('swNext').onclick=e=>{nextOn=!nextOn;e.target.classList.toggle('on',nextOn);e.target.setAttribute('aria-checked', nextOn);};
+document.getElementById('thms').innerHTML=THEMES.map((t,i)=>`<span class="chip" data-t="${i}" role="radio" aria-checked="${i===0}" tabindex="0" style="background:${t.bg};color:${t.fg};border-color:${t.bg}">${t.n}</span>`).join('');
+document.getElementById('thms').onclick=e=>{if(e.target.dataset.t!==undefined)setTheme(+e.target.dataset.t);};
+document.getElementById('back').onclick=()=>location.href='/';
+document.getElementById('back').addEventListener('keydown', e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();location.href='/';}});
+pg.addEventListener('click',e=>{const r=pg.getBoundingClientRect();flip(e.clientX<r.left+r.width*0.35?-1:1);});
+addEventListener('resize',build);
+addEventListener('load',build);
+setTheme(0);build();
+function reset(){fs=15;lh=1.95;mb=12;cols=1;ti=0;curlOn=true;nextOn=true;page=0;
+  ['rFs','rLh','rMb'].forEach(id=>document.getElementById(id).dispatchEvent(new Event('input')));
+  document.getElementById('cols').querySelector('.chip').click();
+  document.getElementById('swCurl').classList.add('on');document.getElementById('swNext').classList.add('on');
+  setTheme(0);}
+</script>
+</body>
+</html>
