@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReaderH</string>
+
+    <string name="title_library">书架</string>
+    <string name="title_settings">设置</string>
+
+    <string name="hint_url">搜索或输入网址</string>
+    <string name="action_go">前往</string>
+    <string name="action_back">后退</string>
+    <string name="action_forward">前进</string>
+    <string name="action_refresh">刷新</string>
+    <string name="action_home">首页</string>
+    <string name="action_more">更多</string>
+    <string name="action_close">关闭</string>
+
+    <string name="menu_read_mode">阅读模式</string>
+    <string name="menu_save">存入书架</string>
+    <string name="menu_library">书架</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_share">分享链接</string>
+    <string name="menu_open_browser">用浏览器打开</string>
+    <string name="menu_desktop">桌面版网站</string>
+
+    <string name="toast_saved">已存入书架</string>
+    <string name="toast_removed">已移出书架</string>
+    <string name="toast_no_content">这个页面没有识别到正文</string>
+    <string name="toast_loading">正在解析正文…</string>
+    <string name="toast_last_page">已经是最后一页</string>
+    <string name="toast_first_page">已经是第一页</string>
+    <string name="toast_loading_next">正在加载下一页…</string>
+
+    <string name="reader_catalog">目录</string>
+    <string name="reader_font">字号</string>
+    <string name="reader_theme">背景</string>
+    <string name="reader_light">亮度</string>
+    <string name="reader_turn">翻页</string>
+    <string name="reader_settings">设置</string>
+    <string name="reader_progress">%1$d / %2$d 页 · %3$d%%</string>
+    <string name="reader_loading">正在排版…</string>
+
+    <string name="turn_simulation">仿真</string>
+    <string name="turn_cover">覆盖</string>
+    <string name="turn_slide">滑动</string>
+    <string name="turn_none">无动画</string>
+
+    <string name="label_font_size">字号</string>
+    <string name="label_line_space">行距</string>
+    <string name="label_para_space">段距</string>
+    <string name="label_brightness">亮度</string>
+    <string name="label_follow_system">跟随系统亮度</string>
+    <string name="label_columns">横屏分栏</string>
+    <string name="label_auto_next">自动加载下一页</string>
+    <string name="label_keep_screen">阅读时保持亮屏</string>
+    <string name="label_immersive">阅读时隐藏系统栏</string>
+    <string name="label_justify">两端对齐</string>
+    <string name="label_search_engine">默认搜索引擎</string>
+    <string name="label_js">启用 JavaScript</string>
+    <string name="label_ua">桌面版 UA</string>
+    <string name="label_clear">清空全部数据</string>
+    <string name="toast_engine_switched">已切换到 %1$s</string>
+    <string name="label_about">所有数据均保存在本机，不上传任何服务器。</string>
+
+    <string name="empty_library">书架还是空的～\n在浏览器里打开一篇文章，点右下角的书本按钮就能存进来</string>
+    <string name="home_url">https://circlereader.com/</string>
+</resources>
