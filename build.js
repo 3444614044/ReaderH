@@ -65,12 +65,9 @@ writeFileSync(join(OUT, '_headers'), [
   '',
 ].join('\n'));
 
-writeFileSync(join(OUT, '_redirects'), [
-  '/index    /    301',
-  '/home     /    301',
-  '/*        /index.html    200',
-  '',
-].join('\n'));
+// 注意：不再生成 _redirects。
+// SPA 回退由 worker/src/index.ts 处理；旧路径跳转也在 Worker 的 REDIRECTS 中。
+// 若在此生成 `/*  /index.html  200`，Cloudflare 会判定为无限循环（strip .html / index 后再匹配自身）。
 
 const files = [];
 for (const p of walk(OUT)) files.push('/' + relative(OUT, p).split(sep).join('/'));
