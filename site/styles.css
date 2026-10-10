@@ -1,0 +1,8 @@
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+@media (prefers-color-scheme: dark) {
+  /* 介绍页保持浅色品牌调，仅增强对比；阅读原型仍由主题色卡控制 */
+  :root { --ink2: #6B7484; --ink3: #9AA3B2; }
+}
+.mask { -webkit-mask-image: -webkit-radial-gradient(white, black); }
