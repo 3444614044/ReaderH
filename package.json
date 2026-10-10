@@ -1,0 +1,18 @@
+{
+  "name": "readerh-landing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 8788",
+    "cf:typecheck": "wrangler types && tsc -p worker/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10",
+    "wrangler": "^3.86.0",
+    "typescript": "^5.6.3",
+    "@cloudflare/workers-types": "^4.20241004.0"
+  }
+}
