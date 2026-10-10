@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReaderH — 让网页赏心悦目，让阅读回归初心</title>
+<meta name="description" content="ReaderH：内置浏览器抓正文，原生引擎按屏分页，番茄小说式仿真翻页。数据全存本机。">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%235B7CF5'/><stop offset='1' stop-color='%237C6BF0'/></linearGradient></defs><rect rx='14' width='64' height='64' fill='url(%23g)'/><text x='32' y='44' font-size='34' font-weight='800' fill='%23fff' text-anchor='middle' font-family='system-ui'>R</text></svg>">
+<link rel="canonical" href="https://readerh.pages.dev/">
+<link rel="stylesheet" href="/styles.css">
+<style>
+:root{
+--brand:#5B7CF5; --brand2:#7C6BF0; --brand-soft:#EEF1FF;
+--ink:#151922; --ink2:#5A6373; --ink3:#8B93A3;
+--line:#E8EBF2; --bg:#FFFFFF; --bg2:#F7F8FC;
+--r:18px; --shadow:0 10px 30px rgba(21,25,34,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+color:var(--ink); background:var(--bg); line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);
+backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid transparent;transition:.3s}
+nav.stuck{border-bottom-color:var(--line)}
+nav .wrap{display:flex;align-items:center;height:60px;gap:10px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:-.3px}
+.logo i{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+display:grid;place-items:center;color:#fff;font-style:normal;font-size:15px}
+nav .links{margin-left:auto;display:flex;gap:26px;font-size:14.5px;color:var(--ink2)}
+nav .links a:hover{color:var(--brand);outline:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 20px;
+border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+font-size:14.5px;font-weight:600;box-shadow:0 6px 18px rgba(91,124,245,.35);transition:.2s;border:0;cursor:pointer}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(91,124,245,.45)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{border-color:var(--brand);color:var(--brand)}
+header{position:relative;overflow:hidden;background:
+radial-gradient(900px 460px at 82% -8%,#E9ECFF 0%,rgba(233,236,255,0) 62%),
+radial-gradient(760px 420px at 8% 6%,#F3EEFF 0%,rgba(243,238,255,0) 58%);
+padding:66px 0 78px}
+header .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 13px;border-radius:15px;
+background:#fff;border:1px solid var(--line);font-size:12.5px;color:var(--ink2);box-shadow:var(--shadow)}
+.tag b{width:6px;height:6px;border-radius:3px;background:#22C55E;display:block}
+h1{font-size:clamp(34px,5.4vw,54px);line-height:1.16;letter-spacing:-1.2px;font-weight:850;margin:20px 0 16px}
+h1 em{font-style:normal;background:linear-gradient(120deg,var(--brand),var(--brand2) 55%,#EC4899);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:17px;color:var(--ink2);max-width:520px}
+.cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.stats{display:flex;gap:34px;margin-top:38px;flex-wrap:wrap}
+.stats div b{display:block;font-size:26px;font-weight:800;letter-spacing:-.6px}
+.stats div span{font-size:12.5px;color:var(--ink3)}
+.phone{width:290px;height:588px;border-radius:38px;background:#111827;padding:11px;
+box-shadow:0 30px 70px rgba(21,25,34,.28),0 0 0 1px rgba(0,0,0,.05);position:relative;margin:0 auto;transform:rotate(0)}
+.screen{width:100%;height:100%;border-radius:29px;overflow:hidden;position:relative;
+background:#F7F5F1;display:flex;flex-direction:column;transition:background .3s}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:96px;height:24px;
+background:#111827;border-radius:13px;z-index:9}
+.sbar{display:flex;justify-content:space-between;padding:13px 20px 6px;font-size:11px;color:#9AA0AC;font-weight:600}
+.pbody{flex:1;position:relative;overflow:hidden;padding:14px 20px 26px}
+.pbody .txt{font-size:14.5px;line-height:1.95;text-align:justify;transition:.3s;will-change:transform}
+.pbody .txt h3{font-size:18px;margin:0 0 14px;line-height:1.5}
+.pbody .txt p{margin:0 0 11px;text-indent:2em;transition:.3s}
+.pfoot{position:absolute;left:0;right:0;bottom:9px;text-align:center;font-size:10.5px;color:#A8AEB8}
+.curl{position:absolute;inset:0;pointer-events:none;opacity:0}
+.curl.go{animation:curl .58s cubic-bezier(.3,.85,.35,1)}
+@keyframes curl{
+0%{opacity:1;transform:translateX(55%) skewX(-8deg)}
+55%{opacity:1}
+100%{opacity:0;transform:translateX(-55%) skewX(6deg)}
+}
+.curl::before{content:"";position:absolute;inset:0;
+background:linear-gradient(100deg,rgba(0,0,0,.30),rgba(0,0,0,0) 40%,rgba(255,255,255,.85) 50%,rgba(0,0,0,0) 62%)}
+.demo-hint{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);font-size:12px;color:var(--ink3);white-space:nowrap}
+section{padding:88px 0}
+.sec-head{text-align:center;max-width:660px;margin:0 auto 52px}
+.sec-head h2{font-size:clamp(26px,3.6vw,38px);font-weight:820;letter-spacing:-.8px;line-height:1.25}
+.sec-head p{margin-top:14px;font-size:16px;color:var(--ink2)}
+.kicker{font-size:12.5px;font-weight:700;letter-spacing:2px;color:var(--brand);text-transform:uppercase}
+.grid{display:grid;gap:18px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;transition:.25s}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:#D8DEEC}
+.card .ico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;
+background:var(--brand-soft);margin-bottom:16px}
+.card h3{font-size:17px;font-weight:750;margin-bottom:8px;letter-spacing:-.2px}
+.card p{font-size:14.5px;color:var(--ink2);line-height:1.75}
+.engine{background:var(--bg2);border-radius:26px;padding:44px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.engine .pane{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.engine h2{font-size:clamp(24px,3.2vw,34px);font-weight:820;letter-spacing:-.7px;line-height:1.3;margin-bottom:16px}
+.engine ul{list-style:none;margin-top:18px}
+.engine li{display:flex;gap:11px;padding:9px 0;font-size:15px;color:var(--ink2);align-items:flex-start}
+.engine li b{color:var(--brand);font-size:15px;line-height:1.6}
+.mock{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;flex:1}
+.mock .bar{height:28px;background:#F1F3F8;display:flex;align-items:center;gap:5px;padding:0 10px}
+.mock .bar i{width:8px;height:8px;border-radius:4px;background:#D6DAE4;display:block}
+.mock .ct{padding:14px;font-size:12.5px;line-height:1.8;color:var(--ink2)}
+.noise{background:#F1F3F8;color:#B4BAC6;font-size:10.5px;text-align:center;padding:7px;border-radius:6px;margin:8px 0}
+.clean{background:#fff}
+.arrow{display:grid;place-items:center;font-size:26px;color:var(--brand);flex:0 0 auto}
+.themes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.th{width:118px;border-radius:16px;padding:18px 12px;text-align:center;cursor:pointer;
+border:2px solid transparent;transition:.2s;background:var(--bg2)}
+.th:hover{transform:translateY(-3px)}
+.th:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.th.sel{border-color:var(--brand);box-shadow:0 8px 22px rgba(91,124,245,.28)}
+.th .sw{height:74px;border-radius:11px;margin-bottom:10px;display:grid;place-items:center;font-size:12.5px}
+.th .nm{font-size:13px;font-weight:650}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.col{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;font-size:12.5px;
+line-height:1.85;color:var(--ink2);text-align:justify}
+.col b{display:block;font-size:13px;color:var(--ink);margin-bottom:8px;text-align:center}
+.privacy{background:linear-gradient(135deg,#151922,#1E2534);color:#fff;border-radius:26px;padding:52px 44px;
+display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.privacy h2{font-size:clamp(24px,3.2vw,34px);font-weight:820;letter-spacing:-.7px;line-height:1.3}
+.privacy p{color:#A6AEBC;margin-top:14px;font-size:15.5px}
+.lock{display:flex;flex-direction:column;gap:12px}
+.lock div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:13px;
+padding:14px 18px;font-size:14.5px;color:#D5DAE4;display:flex;gap:11px;align-items:center}
+.lock div span{font-size:17px}
+details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:0;margin-bottom:12px}
+summary{padding:17px 20px;font-size:15.5px;font-weight:650;cursor:pointer;list-style:none;display:flex;
+justify-content:space-between;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary:focus-visible{outline:2px solid var(--brand);border-radius:14px}
+summary::after{content:"+";font-size:20px;color:var(--brand);font-weight:400;transition:.2s}
+details[open] summary::after{content:"−"}
+details[open] summary{border-bottom:1px solid var(--line)}
+details p{padding:14px 20px 18px;font-size:14.5px;color:var(--ink2);margin:0}
+.get-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+footer{background:var(--bg2);padding:44px 0 34px;font-size:13.5px;color:var(--ink3)}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+footer a:hover{color:var(--brand)}
+.reveal{opacity:0;transform:translateY(22px);transition:.7s cubic-bezier(.2,.8,.3,1);will-change:transform}
+.reveal.in{opacity:1;transform:none}
+.top{position:fixed;right:22px;bottom:26px;width:46px;height:46px;border-radius:50%;
+background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;font-size:18px;color:var(--brand);
+z-index:60;border:1px solid var(--line);opacity:0;pointer-events:none;transition:.3s}
+.top.show{opacity:1;pointer-events:auto}
+@media(max-width:900px){
+header .wrap,.engine,.privacy{grid-template-columns:1fr}
+.g3,.g2,.cols{grid-template-columns:1fr}
+nav .links{display:none}
+section{padding:64px 0}
+.engine,.privacy{padding:32px 24px}
+.phone{width:266px;height:540px}
+}
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="主导航"><div class="wrap">
+<div class="logo"><i>R</i>ReaderH</div>
+<div class="links">
+<a href="#engine">引擎</a>
+<a href="#features">功能</a>
+<a href="#demo">翻页</a>
+<a href="#theme">主题</a>
+<a href="#privacy">隐私</a>
+<a href="#faq">问答</a>
+</div>
+<a class="btn" href="#get">获取源码</a>
+</div></nav>
+
+<header>
+<div class="wrap">
+<div>
+<div class="tag"><b></b> Android · 内置浏览器 · 原生排版</div>
+<h1>让网页赏心悦目，<br><em>让阅读回归初心</em></h1>
+<p class="lead">ReaderH 智能识别并排版网页正文，去除广告与噪音，给你一个像纸质书一样干净、安静的阅读界面——手机上，用仿真翻页读完它。</p>
+<div class="cta">
+<a class="btn" href="#get">获取源码</a>
+<a class="btn ghost" href="#demo">看看翻页效果</a>
+</div>
+<div class="stats">
+<div><b>7</b><span>套阅读主题</span></div>
+<div><b>4</b><span>种翻页方式</span></div>
+<div><b>100%</b><span>数据留在本机</span></div>
+<div><b>0</b><span>账号 / 上报</span></div>
+</div>
+</div>
+<div class="phone">
+<div class="screen" id="screen">
+<div class="notch" aria-hidden="true"></div>
+<div class="sbar"><span id="clock">22:14</span><span>78%</span></div>
+<div class="pbody" id="pbody">
+<div class="txt" id="txt"></div>
+<div class="curl" id="curl" aria-hidden="true"></div>
+<div class="pfoot" id="pfoot">1 / 3 页</div>
+</div>
+</div>
+<div class="demo-hint">← 点屏幕左侧 / 右侧翻页 →</div>
+</div>
+</div>
+</header>
+
+<section id="engine">
+<div class="wrap">
+<div class="engine reveal">
+<div>
+<div class="kicker">自研引擎</div>
+<h2>识别更智能，排版更友好</h2>
+<p style="color:var(--ink2);font-size:15.5px">两道引擎各司其职：一个负责从杂乱的网页里把正文捞出来，一个负责把它排成书。</p>
+<ul>
+<li><b>◆</b><span><strong>识别引擎</strong>：页面加载完成即在 WebView 内执行抽取脚本，按标签权重、文本密度、链接占比综合打分选出正文块，再清洗广告、导航、推荐位与空节点，同步还原懒加载图片的真实地址。</span></li>
+<li><b>◆</b><span><strong>排版引擎</strong>：把 HTML 转成带样式的文本流交给 StaticLayout 逐行量高切页，无论字号调到多大、行距调多松，都不会出现半行文字被截断。</span></li>
+<li><b>◆</b><span><strong>增量重排</strong>：改字号、转横屏、续下一章时只重算受影响的部分，已渲染页面的缓存不丢，翻页不跳、不闪。</span></li>
+</ul>
+</div>
+<div>
+<div class="pane">
+<div style="display:flex;gap:10px;align-items:center">
+<div class="mock">
+<div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="ct">
+<div class="noise">AD 顶部横幅</div>
+<div style="font-weight:700;color:var(--ink);font-size:13px">为什么我们需要阅读模式</div>
+<div style="margin:6px 0">当你打开一个网页，真正想读的正文常常只占一小块…</div>
+<div class="noise">AD 文中插入</div>
+<div>两侧是推荐位，中间插着广告…</div>
+</div>
+</div>
+<div class="arrow" aria-hidden="true">→</div>
+<div class="mock clean">
+<div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="ct" style="padding:18px">
+<div style="font-weight:700;color:var(--ink);font-size:14px;margin-bottom:8px">为什么我们需要阅读模式</div>
+<div style="text-indent:2em">当你打开一个网页，真正想读的正文常常只占一小块…</div>
+<div style="text-indent:2em">两侧是推荐位，中间插着广告…</div>
+</div>
+</div>
+</div>
+<div style="text-align:center;font-size:12.5px;color:var(--ink3);margin-top:14px">识别前 · 噪音环绕 → 识别后 · 只剩正文</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="features" style="padding-top:0">
+<div class="wrap">
+<div class="sec-head reveal">
+<div class="kicker">核心能力</div>
+<h2>手机上的阅读，本该如此</h2>
+<p>从 Circle 阅读助手扩展移植而来，再针对小屏与长文做了专门改造。</p>
+</div>
+<div class="grid g3">
+<div class="card reveal"><div class="ico" aria-hidden="true">📖</div><h3>仿真翻页</h3><p>手指从右下角掀起页面，折痕处带阴影，背面透出下一页内容——和真实纸张一致。另支持覆盖、滑动、无动画三种方式。</p></div>
+<div class="card reveal"><div class="ico" aria-hidden="true">📐</div><h3>按屏分页</h3><p>不是无限下滑，而是按屏幕尺寸精确切成一页页。字号、行距、段距、分栏怎么改，都不会出现半行截断。</p></div>
+<div class="card reveal"><div class="ico" aria-hidden="true">🎨</div><h3>所见即所得</h3><p>底部面板拖动滑杆，正文实时跟着变。字号、行距、段距、背景、亮度，改完立刻能看到效果。</p></div>
+<div class="card reveal"><div class="ico" aria-hidden="true">🔗</div><h3>自动续章</h3><p>读到最后一页之前，后台已悄悄抓取「下一章」正文并追加分页，翻过去就是下一章，无缝衔接。</p></div>
+<div class="card reveal"><div class="ico" aria-hidden="true">🗂️</div><h3>书架与进度</h3><p>喜欢的文章一键存入书架，记录读到第几页。下次点开自动回到上次的位置，长篇也能放心放下。</p></div>
+<div class="card reveal"><div class="ico" aria-hidden="true">🌐</div><h3>内置浏览器</h3><p>自带地址栏、前进后退、进度条与桌面版 UA 切换。识别到正文就浮出阅读按钮，不用再来回复制链接。</p></div>
+</div>
+</div>
+</section>
+
+<section id="demo" style="background:var(--bg2)">
+<div class="wrap">
+<div class="sec-head reveal">
+<div class="kicker">翻页演示</div>
+<h2>点一点，感受真实的翻页</h2>
+<p>点上方手机屏幕的左侧或右侧翻页，也可以在这里调字号、行距、切换背景。</p>
+</div>
+<div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap" class="reveal" role="group" aria-label="阅读参数">
+<button class="btn ghost" onclick="setFont(-1)" aria-label="缩小字号">A<sup>−</sup></button>
+<button class="btn ghost" onclick="setFont(1)" aria-label="放大字号">A<sup>+</sup></button>
+<button class="btn ghost" onclick="setLine(-0.15)" aria-label="减小行距">行距−</button>
+<button class="btn ghost" onclick="setLine(0.15)" aria-label="增大行距">行距+</button>
+<button class="btn ghost" onclick="flip(-1)">上一页</button>
+<button class="btn" onclick="flip(1)">下一页 →</button>
+</div>
+</div>
+</section>
+
+<section id="theme">
+<div class="wrap">
+<div class="sec-head reveal">
+<div class="kicker">炫彩主题</div>
+<h2>七套配色，任你泼墨挥毫</h2>
+<p>点一下色卡，上方手机里的阅读界面会立刻跟着换。</p>
+</div>
+<div class="themes reveal" id="themes" role="radiogroup" aria-label="阅读主题"></div>
+<div class="cols reveal">
+<div class="col"><b>单栏</b>正文占据整屏宽度，手机上最省心的默认选择，每行字数适中、回扫轻松。</div>
+<div class="col"><b>双栏</b>横屏或平板时启用，左右两栏同时推进，翻一次读两段，屏幕不再空一半。</div>
+<div class="col"><b>三栏</b>大屏用户的福利，栏数你说了算，不浪费屏幕上的每一寸空间。</div>
+</div>
+</div>
+</section>
+
+<section id="privacy" style="padding-top:0">
+<div class="wrap">
+<div class="privacy reveal">
+<div>
+<div class="kicker" style="color:#9BA6FF">隐私</div>
+<h2>数据只属于你</h2>
+<p>除了你之外，任何人都无法访问。没有账号体系，没有云端同步，没有任何埋点上报——书架、阅读进度、偏好设置全部写在本机的 SQLite 和 SharedPreferences 里。</p>
+</div>
+<div class="lock">
+<div><span aria-hidden="true">📵</span>不申请通讯录、定位、相册等无关权限</div>
+<div><span aria-hidden="true">🔒</span>联网只用于加载你主动打开的网页与图片</div>
+<div><span aria-hidden="true">💾</span>书架与进度存本地数据库，卸载即清除</div>
+<div><span aria-hidden="true">🕶️</span>设置项可一键清空全部数据</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="faq" style="padding-top:0">
+<div class="wrap" style="max-width:820px">
+<div class="sec-head reveal">
+<div class="kicker">常见问题</div>
+<h2>你可能想问的</h2>
+</div>
+<details class="reveal" open>
+<summary>哪些网站能被正确识别？</summary>
+<p>绝大多数以文字为主的站点都可以：新闻、博客、公众号文章、文档、小说章节页。识别基于 DOM 结构与文本密度打分，不依赖站点适配规则，因此无需维护规则列表。极度动态渲染或正文本身就很短的页面（如登录页、单页应用）效果有限。</p>
+</details>
+<details class="reveal">
+<summary>翻页动画会卡吗？</summary>
+<p>不会。分页在文章加载时一次性完成，翻页只是对已经量好高度的文本块做位移；仿真翻页的折痕与阴影由属性动画驱动，避开主线程的重绘热点。在千元机上也可稳定 60 帧。</p>
+</details>
+<details class="reveal">
+<summary>自动续章是怎么做到的？</summary>
+<p>当剩余页数少于阈值时，App 用隐藏 WebView 打开从当前页提取出的「下一页 / 下一章」链接，走同一套识别流程，把新正文追加到文本流末尾并增量分页。你看到的是无缝的一页，背后其实是两个网页。</p>
+</details>
+<details class="reveal">
+<summary>数据真的完全不上传？</summary>
+<p>是的。网络权限仅用于加载你主动访问的网页与图片；无广告 SDK、无统计 SDK、无推送通道。备份与迁移通过本机文件导出完成，密钥不出设备。</p>
+</details>
+<details class="reveal">
+<summary>支持导入自己的字体吗？</summary>
+<p>支持。可在设置里指定 TTF/OTF，系统字体与自定义字体均可，字重、行距、段距独立保存为一套「排版方案」，可随时切换或删除。</p>
+</details>
+<details class="reveal">
+<summary>最小运行环境是什么？</summary>
+<p>Android 8.0（API 26）及以上，Kotlin 编写，仅依赖官方 AndroidX，无第三方 SDK。安装包体积控制在 6MB 以内。</p>
+</details>
+</div>
+</section>
+
+<section id="get" style="background:var(--bg2)">
+<div class="wrap" style="text-align:center">
+<div class="reveal">
+<div class="kicker">开始使用</div>
+<h2 style="font-size:clamp(24px,3.4vw,36px);font-weight:820;letter-spacing:-.7px;margin:12px 0 14px">把 ReaderH 装进你的手机</h2>
+<p style="color:var(--ink2);max-width:600px;margin:0 auto 28px">Android Studio 打开源码工程，连上手机点 Run 即可；也可以先打开交互原型，在浏览器里体验完整流程。</p>
+<div class="get-btns">
+<a class="btn" href="/reader_preview.html">打开交互原型</a>
+<a class="btn ghost" href="#faq">查看编译说明</a>
+</div>
+<p style="font-size:12.5px;color:var(--ink3);margin-top:20px">Android 8.0+ · Kotlin · 仅使用官方 AndroidX，无第三方 SDK</p>
+</div>
+</div>
+</section>
+
+<footer><div class="wrap">
+<div>ReaderH · 让网页赏心悦目，让阅读回归初心</div>
+<div>灵感来自 <a href="https://circlereader.com/" target="_blank" rel="noopener">Circle 阅读助手</a> · 数据全部保存在本机</div>
+</div></footer>
+
+<a class="top" id="top" href="#" aria-label="回到顶部">↑</a>
+
+<script>
+/* ---------- 手机里的翻页演示 ---------- */
+const CHAPTER = {
+  title:'为什么我们需要「阅读模式」',
+  paras:[
+    '当你打开一个网页，真正想读的正文常常只占屏幕的一小块：两侧是推荐位，中间插着广告，字体忽大忽小，行距挤成一团。阅读模式做的事很简单——把正文之外的东西全部拿掉，再按你能接受的字号、行距、背景色重新排一遍。',
+    '好的阅读体验有几个共同点：字号可以自己定、行距宽松、背景不刺眼、翻页符合直觉、读到一半退出去还能接着读。Circle 阅读助手把这些能力做进了浏览器扩展，而在手机端，我们把它们变成了一个内置浏览器的独立 App。',
+    '手机上的阅读还要解决另外两件事：一是屏幕窄，正文必须按屏幕尺寸重新分页，而不是无限下滑；二是长文和小说通常是分页的，读完一章要能自动接上下一章。',
+    '于是就有了 ReaderH：内置浏览器抓正文，原生渲染引擎按屏分页，仿真翻页像翻纸质书，读到末尾自动加载下一页。',
+    '分页不是简单地按字数切。渲染引擎会把 HTML 转成带样式的文本流，再交给 StaticLayout 按实际行高一行行量，量满一屏就切一页——所以无论你把字号调到多大、行距调到多松，都不会出现半行文字被截断的情况。',
+    '翻页是另一件讲究的事。仿真模式下，手指从右下角掀起页面，下面透出的是下一页的内容，折痕处有阴影，翻过去之后背面显示的是刚被翻走那一页——和真实纸张的行为一致。',
+    '长篇内容还要能续上。当读到最后一页时，App 会在后台用一个隐藏的 WebView 打开原文的「下一页」链接，抽取出正文追加到当前文章后面，重新分页后无缝接上，你完全感觉不到切换。',
+    '最后是所有阅读类应用都绕不开的一点：数据只留在本机。没有账号，没有同步，没有服务器，书架、进度、偏好设置都写在手机本地的 SQLite 和 SharedPreferences 里。'
+  ]
+};
+const THEMES=[
+  {n:'纸白',bg:'#F7F5F1',fg:'#2B2B2B'},{n:'纯白',bg:'#FFFFFF',fg:'#222222'},
+  {n:'米黄',bg:'#FBF3DC',fg:'#3A3226'},{n:'护眼绿',bg:'#CDE6C8',fg:'#22331F'},
+  {n:'青蓝',bg:'#DCEAF3',fg:'#1E2C36'},{n:'暗夜',bg:'#1C1F26',fg:'#B8BEC9'},
+  {n:'纯黑',bg:'#000000',fg:'#9EA5B0'}
+];
+let page=0, total=1, ti=0, fs=14.5, lh=1.95;
+const bodyEl=document.getElementById('pbody'), txt=document.getElementById('txt');
+const curl=document.getElementById('curl'), screenEl=document.getElementById('screen');
+let raf=0;
+
+function build(){
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(()=>{
+    txt.style.height='auto';
+    txt.innerHTML = '<h3>'+CHAPTER.title+'</h3>' + CHAPTER.paras.map(p=>'<p>'+p+'</p>').join('');
+    txt.style.fontSize=fs+'px'; txt.style.lineHeight=lh;
+    const avail=bodyEl.clientHeight-28;
+    total=Math.max(1,Math.ceil(txt.scrollHeight/avail));
+    page=Math.min(page,total-1);
+    txt.style.height=avail+'px';
+    txt.style.transform='translateY('+(-page*avail)+'px)';
+    txt.style.overflow='hidden';
+    document.getElementById('pfoot').textContent=(page+1)+' / '+total+' 页 · '+Math.round((page+1)*100/total)+'%';
+  });
+}
+function flip(d){
+  if(d>0&&page>=total-1){ anim(); return; }
+  if(d<0&&page<=0) return;
+  page+=d; anim(); build();
+}
+function anim(){ curl.classList.remove('go'); void curl.offsetWidth; curl.classList.add('go'); }
+function setTheme(i){
+  ti=i; const t=THEMES[i];
+  screenEl.style.background=t.bg; txt.style.color=t.fg;
+  document.querySelectorAll('#themes .th').forEach((e,k)=>{
+    e.classList.toggle('sel',k===i);
+    e.setAttribute('aria-checked', k===i ? 'true' : 'false');
+  });
+}
+function setFont(d){ fs=Math.min(22,Math.max(11,fs+d)); build(); }
+function setLine(d){ lh=Math.min(2.6,Math.max(1.4,lh+d)); build(); }
+
+document.getElementById('themes').innerHTML = THEMES.map((t,i)=>
+  `<div class="th ${i===0?'sel':''}" role="radio" aria-checked="${i===0}" tabindex="0" onclick="setTheme(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setTheme(${i})}">
+     <div class="sw" style="background:${t.bg};color:${t.fg}">Aa</div>
+     <div class="nm">${t.n}</div>
+   </div>`).join('');
+
+document.getElementById('pbody').addEventListener('click',e=>{
+  const rect=bodyEl.getBoundingClientRect();
+  flip(e.clientX < rect.left+rect.width*0.35 ? -1 : 1);
+});
+
+/* ---------- 滚动揭示 ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
+addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('stuck',scrollY>10);
+  document.getElementById('top').classList.toggle('show',scrollY>600);
+});
+
+/* ---------- 时钟 ---------- */
+function tick(){const d=new Date();document.getElementById('clock').textContent=
+  String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+tick(); setInterval(tick,30000);
+addEventListener('resize',build);
+addEventListener('load',build);
+build();
+</script>
+</body>
+</html>
