@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="brand">#FF5B7CF5</color>
+    <color name="brand_dark">#FF3D5BD9</color>
+    <color name="brand_light">#FFE8EDFF</color>
+
+    <color name="surface">#FFF7F8FC</color>
+    <color name="surface_card">#FFFFFFFF</color>
+    <color name="text_primary">#FF1F2430</color>
+    <color name="text_secondary">#FF7A8194</color>
+    <color name="divider">#FFE9ECF3</color>
+    <color name="scrim">#99000000</color>
+
+    <!-- 阅读主题 -->
+    <color name="reader_bg_paper">#FFF9F5EC</color>
+    <color name="reader_text_paper">#FF2B2B2B</color>
+    <color name="reader_bg_white">#FFFFFFFF</color>
+    <color name="reader_text_white">#FF1A1A1A</color>
+    <color name="reader_bg_beige">#FFF3E7CE</color>
+    <color name="reader_text_beige">#FF4A3B26</color>
+    <color name="reader_bg_green">#FFCDE8C8</color>
+    <color name="reader_text_green">#FF21331D</color>
+    <color name="reader_bg_blue">#FFDCE9F5</color>
+    <color name="reader_text_blue">#FF1B2E3C</color>
+    <color name="reader_bg_night">#FF1B1E26</color>
+    <color name="reader_text_night">#FF9BA3B4</color>
+    <color name="reader_bg_black">#FF000000</color>
+    <color name="reader_text_black">#FF7C828C</color>
+</resources>
